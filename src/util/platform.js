@@ -65,7 +65,6 @@ function getGreaseMonkeyAPI () {
   } else {
     gm.xmlHttpRequest = GM.xmlHttpRequest;
   }
-  // GreaseMonkey v4.0 removed this function.
   if (typeof GM_registerMenuCommand === 'function') {
     gm.registerMenuCommand = GM_registerMenuCommand;
   } else {
@@ -82,17 +81,26 @@ function getGreaseMonkeyAPI () {
   return gm;
 }
 
+
+function getGMInfo () {
+  if (typeof GM_info === 'object' && GM_info) {
+    return GM_info;
+  } else if (typeof GM === 'object' && GM && GM.info) {
+    return GM.info;
+  } else {
+    return {};
+  }
+}
+
+
 // magic property to get the original object
 const MAGIC_KEY = '__adsbypasser_reverse_proxy__';
 
 
 function getUnsafeWindowProxy () {
-  // GreaseMonkey 1.15 won't pass this test
-  const isFirefox = typeof InstallTrigger !== 'undefined';
-  // Violentmonkey does not need the wrapper
-  const isWebExtension = typeof cloneInto === 'undefined' || typeof exportFunction === 'undefined';
-  if (!isFirefox || isWebExtension) {
-    // other browsers does not need this
+  const isGreaseMonkey = getGMInfo().scriptHandler === 'Greasemonkey';
+  // Only GreaseMonkey need this wrapper
+  if (!isGreaseMonkey) {
     return rawUSW;
   }
 
@@ -100,19 +108,6 @@ function getUnsafeWindowProxy () {
     set (target, key, value) {
       if (key === MAGIC_KEY) {
         return false;
-      }
-      // GreaseMonkey 2.1 has a bug
-      // unsafeWindow.open will become read-only after modifying
-      // so we have to explicitly assign property descriptor
-      if (target === unsafeWindow && key === 'open') {
-        const d = Object.getOwnPropertyDescriptor(target, key);
-        // wrap the returned object back so that content script can see
-        // through the object
-        d.value = clone(function () {
-          const rv = value();
-          return cloneInto(rv, unsafeWindow);
-        });
-        Object.defineProperty(target, key, d);
       } else {
         target[key] = clone(value);
       }

@@ -1,7 +1,9 @@
 _.register({
-  rule: 'http://www.fotosik.pl/pokaz_obrazek/pelny/*.html',
+  rule: {
+    host: /^www\.fotosik\.pl$/,
+  },
   async ready () {
-    const i = $('a.noborder img');
+    const i = $('.simple-photo img');
     await $.openImage(i.src);
   },
 });

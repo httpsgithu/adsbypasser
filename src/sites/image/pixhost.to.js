@@ -5,9 +5,14 @@ _.register({
       path: /^\/show\//,
     },
     {
-      host: /^3xplanet\.com$/,
+      host: [
+        /^3xplanet\.(com|net)$/,
+        /^javtenshi\.com$/,
+        /^jav-load\.com$/,
+        /^uncenav\.com$/,
+      ],
       path: /^\/viewimage\//,
-    },
+    }
   ],
   async ready () {
     $.remove('iframe, #ad');
